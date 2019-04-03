@@ -15,3 +15,5 @@ Four main steps were conducted during this assignment:
 - Waffle charts (Iron comprises of 4 waffle charts)
 - Dumbbell chart (1)
 - Fancy charts (2)
+
+<img width="677" alt="Screen Shot 2019-04-03 at 20 51 28" src="https://user-images.githubusercontent.com/44138106/55504952-48c9c300-5652-11e9-9692-e0bb7c260dea.png">
