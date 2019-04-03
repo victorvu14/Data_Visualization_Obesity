@@ -9,8 +9,9 @@ Four main steps were conducted during this assignment:
 2.  Understand the data
 3.  Manipulate and create additional separate datasets
 4.  Create charts to represent the dataset
-      a. Simple charts (2)
-      b. Tufte charts (4)
-      c. Waffle charts (Iron comprises of 4 waffle charts)
-      d. Dumbbell chart (1)
-      e. Fancy charts (2)
+
+- Simple charts (2)     
+- Tufte charts (4)
+- Waffle charts (Iron comprises of 4 waffle charts)
+- Dumbbell chart (1)
+- Fancy charts (2)
