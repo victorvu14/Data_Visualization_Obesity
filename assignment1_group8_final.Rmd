@@ -1,0 +1,511 @@
+---
+title: "Assignment 1 (ggplot2/R) - Data Visualization"
+author: "Group 8: Vikas Agarwal, Camille Blain-Coallier, Federico C. Loguercio, Giulio De Felice, Nayla Fakhoury, Alejandro Koury, Victor Vu Duy Phuoc"
+date: "21/01/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+This is an R Markdown document comprised of a dataset that contains data related to the level (rate) of adult obesity in the United States from 2011 to 2015.
+
+The objective of this assignment was to become familiar with creating some standard and more innovative visualizations with ggplot2/R. 
+
+Four main steps were conducted during this assignment: 
+1.	Select and save our data
+2.  Understand the data
+3.  Manipulate and create additional separate datasets
+4.  Create charts to represent the dataset
+      a. Simple charts (2)
+      b. Tufte charts (4)
+      c. Waffle charts (Iron comprises of 4 waffle charts)
+      d. Dumbbell chart (1)
+      e. Fancy charts (2)
+
+Before doing anything, remove all the data from the workspace.
+
+```{r}
+
+rm(list=ls())
+
+local({
+    r <- getOption("repos")
+    r["CRAN"] <- "http://cran.rediris.es/"
+    options(repos = r)})
+
+```
+
+After, install some of the packages that are being used in the project. Some other packages are specified when creating innovative charts. 
+
+```{r}
+
+#Install Packages if not previously installed
+if(!'ggplot2'%in%installed.packages()){
+  install.packages('ggplot2')
+}
+
+if(!'ggthemes'%in%installed.packages()){
+  install.packages('ggthemes')
+}
+
+if(!'waffle'%in%installed.packages()){
+  install.packages('waffle')
+}
+
+if(!'RColorBrewer'%in%installed.packages()){
+  install.packages('RColorBrewer')
+}
+
+#Load packages
+library(ggplot2)
+library(ggthemes)
+library(waffle)
+library(RColorBrewer)
+
+```
+
+#######################################################################################################
+## Data Set Selection And Creation ##
+#######################################################################################################
+
+#### 1. 
+
+The following link offers 52 datasets to choose from: http://www.makeovermonday.co.uk/data/data-sets-2017/
+
+We decided to analyze dataset #41, which is the level of adult obesity in the United States between the years 2011-2015. The given dataset was saved in gist (github) from which we load our data in the following step.
+
+```{r}
+
+#Read and format data from gist
+
+ob<-read.csv('https://gist.githubusercontent.com/akoury/bd79246c1bd2fdbb3c790c74d110d793/raw/b11c716bda52246070b2e5acfdf87c4b9ecdc204/Obesity%2520in%2520America.csv')
+
+```
+
+#### 2.
+
+In this step, we wanted to understand the structure and content of the dataset before creating data visualizing charts. We can see that we have obesity levels for every category (age, income, education, gender) by state for every year between 2011 and 2015. We also have additional information like the upper and lower confidence limits to the obesity levels as well as obesity levels from a national point of view. 
+
+```{r}
+
+#Data structure
+names(ob)
+head(ob, n=10)
+str(ob)
+summary(ob)
+
+```
+
+#### 3. 
+
+After analyzing the dataset, we decided to do two steps before creating charts:
+  1. Convert the data under the year column as factor data
+  2. Create separate datasets for each sub_category in order to simplify the creation of data charts depending on categories
+  
+Further on, when creating charts, we made some additional data preparation to better present the data depending on the nature of the chart. 
+
+```{r}
+
+#Manipulate dataset and create separate datasets for each category
+
+ob$year<-as.factor(ob$year) 
+
+ob_age <- ob[ob$category == "Age",]
+ob_educ <- ob[ob$category == "Education",]
+ob_gender <- ob[ob$category == "Gender",]
+ob_income <- ob[ob$category == "Income",]
+ob_total <- ob[ob$category == "Total",]
+
+```
+
+#######################################################################################################
+## Data Visualization Creation ##
+#######################################################################################################
+
+#### 4a. Simple Chart #1 - Small Multiples Time Series
+
+In this chart, we created a small multiples chart to represent the total obesity level, by state, over time. Thus, we can easily follow trends within states and can compare those trends to the average national trend (dotted line). 
+
+From this graph, we can see, that many states are in an upward trend, meaning obesity levels are increasing. These states include Alabama, West Virginia and Kansas. Some are also well above obesity levels like Arkansas and Louisiana. Few states are under the average level of obesity and are capable of maintaining a stable trend like Vermont, Colorado, Utah and California.  
+
+```{r}
+
+#Data Preparation
+
+#In this chart, we created our own theme to apply to the small multiples time series chart (named g8_theme)
+
+fill_color = '#2E282A'
+text_color = '#F7BC08'
+
+g8_theme<-theme(
+  panel.grid.major = element_blank(), 
+  panel.grid.minor = element_blank(),
+  plot.title = element_text(size = 18, hjust = 0.5, color = text_color),
+  axis.title = element_blank(),
+  axis.text = element_blank(),
+  axis.ticks = element_blank(),
+  axis.line = element_blank(), 
+  panel.border = element_blank(),
+  strip.text = element_text(size = 6, color = 'white'),
+  panel.background = element_rect(fill = fill_color),
+  strip.background =element_rect(fill= fill_color),
+  plot.background = element_rect(fill = fill_color),
+  legend.position="None"
+)
+
+#Plotting
+
+ggplot(ob_total[ob_total$state_abbr != 'US',], aes(x=year, y=obesity_percentage, group = 1)) + 
+  geom_line(size=0.7, color = text_color) +
+  geom_hline(yintercept = mean(ob_total$obesity_percentage), color = "white", alpha = 0.3, size = 0.4, linetype="dotted")  +
+  facet_wrap(~state, ncol=9) +
+  ggtitle("Obesity Rate (%) by State from 2011 to 2015") +
+  g8_theme
+
+```
+
+#### 4a. Simple Chart #2 - Bar Chart
+
+In this chart, we evaluated the obesity level by age according to each year. Year over year, we can see there is a small increase of obesity level per age group. We can see that obesity levels are very similar between 45 and 64 years old. We can assume that as people age, their activity level may decrease, being one of the factors to increase obesity levels. 
+
+```{r}
+
+#Data Preparation
+
+#Dataset ob_age_us is a subset of ob_age where the only data included is the National data
+
+ob_age_us<-subset(ob_age, state_abbr %in% c('US','us'))
+
+#Plotting
+
+ggplot(ob_age_us, aes(ob_age_us$sub_cat,ob_age_us$obesity_percentage, fill =ob_age_us$year)) +
+  geom_bar(stat="identity", position = "dodge") + 
+  scale_y_continuous(limits=c(0, 50)) +
+  theme_bw() +
+  theme(panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(), 
+        panel.border = element_blank(),
+        axis.title = element_blank(), 
+        axis.ticks = element_blank(),
+        axis.text = element_text(colour="white", size = 10),
+        legend.title = element_blank(),
+        plot.background=element_rect(fill='#2E282A'),
+        panel.background=element_rect(fill='#2E282A'),
+        legend.background =element_rect(fill='#2E282A'),
+        legend.text = element_text(colour="white", size=10),
+        plot.title=element_text(size = 18, hjust = 0.5, color ="#F7BC08" )) +
+  ggtitle("Obesity Rate (%) by Age from 2011 to 2015")  +
+  scale_fill_manual(values = c("#ffeda0","#fec44f","#fe9929","#cc4c02","#9b3e12"))
+
+
+```
+
+#### 4b. Tufte Boxplots Charts
+
+Similar to the graph above, the three tufte box plots represent obesity levels by age, education, income and gender.
+
+From the age chart, we can see the upward trend but can also see the dispersion of the data. By this, we mean that even though 18 to 24 year olds have the lowest obesity levels, the data shows that some of them have very high levels of obesity, while 45 to 54 year olds have similar obesity levels. 
+
+We can also see great differences in obesity levels depending on the level of education. From this graph, we can assume that the better the education, the lower the probability of being obese. 
+
+The same inference can be made in regards to income; as income increases, the levels of obesity decrease. 
+
+As for gender, males and females have very similar data. Thus, the gender not being an important contributor to obesity.
+
+
+```{r}
+
+#Plotting
+
+#By Age
+ggplot(ob_age, aes(sub_cat,obesity_percentage)) + 
+  theme_tufte(base_size = 7, ticks=F) +
+  geom_tufteboxplot(outlier.colour="transparent", color= "#F7BC08") + 
+  scale_y_continuous(limits=c(0, 50)) +
+  theme(axis.title=element_blank(),
+        plot.background=element_rect(fill='#2E282A'),
+        axis.text = element_text(colour="white", size = 10),
+        text=element_text(family="sans"),
+        plot.title=element_text(size = 20, hjust = 0.5, color ="#F7BC08" ))+
+  ggtitle("Obesity Rate (%) by Age")
+
+
+#By Education
+ob_educ$sub_cat <- factor(ob_educ$sub_cat, levels = c("Less than high school", "High school graduate", "Some college or technical school", "College graduate"),ordered = TRUE)
+ggplot(ob_educ, aes(sub_cat,obesity_percentage)) + 
+  theme_tufte(base_size = 7, ticks=F) +
+  geom_tufteboxplot(outlier.colour="transparent", color= "#F7BC08") +
+  scale_y_continuous(limits=c(0, 50)) +
+  theme(axis.title=element_blank(),
+        plot.background=element_rect(fill='#2E282A'),
+        axis.text = element_text(colour="white", size = 10),
+        text=element_text(family="sans"),
+        plot.title=element_text(size = 20, hjust = 0.5, color ="#F7BC08" ),
+        axis.text.x = element_text(angle = 25)) +
+  ggtitle("Obesity Rate (%) by Level of Education")
+
+#By Gender
+ggplot(ob_gender, aes(sub_cat,obesity_percentage)) + 
+  theme_tufte(base_size = 7, ticks=F) +
+  geom_tufteboxplot(outlier.colour="transparent", color= "#F7BC08") + 
+  scale_y_continuous(limits=c(0, 50)) +
+  theme(axis.title=element_blank(),
+        plot.background=element_rect(fill='#2E282A'),
+        axis.text = element_text(colour="white", size = 10),
+        text=element_text(family="sans"),
+        plot.title=element_text(size = 20, hjust = 0.5, color ="#F7BC08" ))+
+  ggtitle("Obesity Rate (%) by Gender")
+
+#By Income
+ob_income$sub_cat <- factor(ob_income$sub_cat, levels = c("Less than $15,000", "$15,000 - $24,999", "$25,000 - $34,999", "$35,000 - $49,999", "$50,000 - $74,999", "$75,000 or greater","Data not reported"),ordered = TRUE)
+
+ggplot(ob_income[ob_income$sub_cat!="Data not reported",], aes(sub_cat,obesity_percentage)) + 
+  theme_tufte(base_size = 7, ticks=F) +
+  geom_tufteboxplot(outlier.colour="transparent", color= "#F7BC08") + 
+  scale_y_continuous(limits=c(0, 50)) +
+  theme(axis.title=element_blank(),
+        plot.background=element_rect(fill='#2E282A'),
+        axis.text = element_text(colour="white", size = 10),
+        text=element_text(family="sans"),
+        plot.title=element_text(size = 20, hjust = 0.5, color ="#F7BC08"),
+        axis.text.x = element_text(angle = 25)) +
+  ggtitle("Obesity Rate (%) by Income")
+
+
+```
+
+#### 4c. Waffle Chart
+
+This graph supports the graph above, where we can see the different education levels are factors in obesity levels. It would be interesting to see if these results change when using the same sample size for all categories. 
+
+```{r, out.width="200%"}
+
+#Plotting
+
+
+college.graduate.2015 <- c(`Obese (20%)` = 20, `Not Obese (80%)` = 80)
+waffle(
+  college.graduate.2015 / 2, rows = 5, size = 0.5,
+  colors = c("#F7BC08", "grey"),
+  title = "College Graduates (2015)",
+  xlab = "1 square = 3,253 humans") + 
+  theme(plot.title=element_text(size = 8, hjust = 0, color ="#F7BC08"),
+        plot.background=element_rect(fill='#2E282A'),
+        panel.background=element_rect(fill='#2E282A'),
+        legend.text = element_text(colour="white", size=5),
+        axis.title.x =element_text(colour="white", size=5)) -> A
+
+high.school.graduate.2015 <- c(`Obese (31%)` = 31, `Not Obese (69%)` = 69)
+waffle(
+  high.school.graduate.2015 / 2, rows = 5, size = 0.5,
+  colors = c("#F7BC08", "grey"),
+  title = "High School Graduates (2015)",
+  xlab = "1 square = 2,264 humans") + 
+  theme(plot.title=element_text(size = 8, hjust = 0, color ="#F7BC08"),
+        plot.background=element_rect(fill='#2E282A'),
+        panel.background=element_rect(fill='#2E282A'),
+        legend.text = element_text(colour="white", size=5),
+        axis.title.x =element_text(colour="white", size=5)) -> B
+
+less.than.high.school.2015 <- c(`Obese (34%)` = 34, `Not Obese (66%)` = 66)
+waffle(
+  less.than.high.school.2015 / 2, rows = 5, size = 0.5,
+  colors = c("#F7BC08", "grey"),
+  title = "Less Than High School Graduates (2015)",
+  xlab = "1 square = 586 humans") + 
+  theme(plot.title=element_text(size = 8, hjust = 0, color ="#F7BC08"),
+        plot.background=element_rect(fill='#2E282A'),
+        panel.background=element_rect(fill='#2E282A'),
+        legend.text = element_text(colour="white", size=5),
+        axis.title.x =element_text(colour="white", size=5))  -> C
+
+some.college.or.technical.school.2015 <- c(`Obese (30%)` = 30, `Not Obese (70%)` = 70)
+waffle(
+  some.college.or.technical.school.2015 / 2, rows = 5, size = 0.5,
+  colors = c("#F7BC08", "grey"),
+  title = "College/Technical School Graduates (2015)",
+  xlab = "1 square = 2,183 humans") + 
+  theme(plot.title=element_text(size = 8, hjust = 0, color ="#F7BC08"),
+        plot.background=element_rect(fill='#2E282A'),
+        panel.background=element_rect(fill='#2E282A'),
+        legend.text = element_text(colour="white", size=5),
+        axis.title.x =element_text(colour="white", size=5))  -> D
+
+iron(A, D, B, C)
+
+```
+
+#### 4d. Dumbbell Chart
+
+This chart gives us an overview of the lower and upper limits to the obesity levels by State. The difference between the lower and upper bound is similar in every state except for Guam, Nevada, Alaska and Disctrict of Columbia. It would be interesting to investigate the reasons to these differences. 
+
+Please be aware that the x-axis does not start at 0%
+```{r}
+
+#Install Packages if not previously installed
+if(!'ggalt'%in%installed.packages()){
+  install.packages('ggalt')
+}
+
+library(ggalt)
+
+#Data Preparation
+
+ob_total <- ob[ob$category == "Total",]
+total_2015 <- ob_total[ob_total$year == 2015,]
+total_2015 <- total_2015[total_2015$state_abbr != 'US',]
+total_2015$upper_conf_limit <- total_2015$upper_conf_limit/100
+total_2015$lower_conf_limit <- total_2015$lower_conf_limit/100
+total_2015$obesity_percentage <- total_2015$obesity_percentage/100
+total_2015 <- total_2015[order(total_2015$obesity_percentage),]
+total_2015$state <- factor(total_2015$state, levels=as.character(total_2015$state))
+
+#Plotting
+
+dumbbell1 <- ggplot(total_2015, aes(x=lower_conf_limit, xend=upper_conf_limit, y=state, group=state)) + 
+  geom_dumbbell(size=1.8, color="#bdbdbd", 
+                colour_x = "#33658A", colour_xend ="#F7BC08" ,
+                dot_guide=TRUE, dot_guide_size=0.1, dot_guide_colour = 'white') +
+  labs(x= NULL, 
+       y=NULL, 
+       title="Confidence Interval of Obesity Rate (%) by State in 2015") +
+  scale_x_continuous(labels=scales::percent) + 
+  theme_bw() + 
+  theme(plot.title=element_text(size = 15, hjust = 0.5, color ="#F7BC08" ),
+        plot.background=element_rect(fill="#2E282A"),
+        axis.text = element_text(colour="white", size = 6),
+        panel.background=element_rect(fill="#2E282A"),
+        panel.grid.minor=element_blank(),
+        panel.grid.major.y=element_blank(),
+        panel.grid.major.x=element_blank(),
+        axis.ticks=element_blank(),
+        panel.border=element_blank()) 
+
+plot(dumbbell1)
+
+
+```
+
+#### 4e. Fancy Chart - Diverging Bar Chart
+
+This chart compares the states' obesity level to each other. From there, we can easily see which states have low obesity levels (blue) or high obesity levels (green) in comparison to the other states in 2015.  
+
+```{r}
+
+# Data Preparation
+
+ob_total_2015<-ob_total[ob_total$year=="2015",]
+
+
+ob_total_2015$obesity_percentage_z <- round((ob_total_2015$obesity_percentage - mean(ob_total_2015$obesity_percentage))/sd(ob_total_2015$obesity_percentage), 2)  # compute normalized obesity_percentage
+
+ob_total_2015$obesity_percentage_type <- ifelse(ob_total_2015$obesity_percentage_z < 0, "below", "above")  # above / below avg flag
+
+ob_total_2015 <- ob_total_2015[order(ob_total_2015$obesity_percentage_z), ]  # sort
+
+ob_total_2015$state <- factor(ob_total_2015$state, levels = ob_total_2015$state)  # convert to factor to retain sorted order in plot.
+
+
+#Plotting
+
+ggplot(ob_total_2015[ob_total_2015$state_abbr != 'US',], aes(x=state, y=obesity_percentage_z, label=obesity_percentage_z)) + 
+  geom_bar(stat='identity', aes(fill=obesity_percentage_type), width=.5)  +
+  scale_fill_manual(name="Obesity Percentage", 
+                    labels = c("Above Average", "Below Average"), 
+                    values = c("above"="#F7BC08", "below"="#bdbdbd")) + 
+  labs(title= "Comparing the States' Obesity Rates (%) to Each Other in 2015") +
+  coord_flip() + 
+  theme_bw() + theme(panel.border = element_blank(), panel.grid.major = element_blank(),
+                     panel.grid.minor = element_blank(), axis.line = element_blank())+
+  theme(axis.title.x=element_blank(),
+        axis.title.y=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        axis.ticks.y=element_blank(),
+        plot.background=element_rect(fill="#2E282A"),
+        axis.text = element_text(colour="white", size = 6),
+        panel.background=element_rect(fill="#2E282A"),
+        plot.title=element_text(size = 15, hjust = 0.5, color ="#F7BC08" ),
+        legend.position = "none") 
+
+
+```
+
+#### 4e. Fancy Chart - Animated Map
+
+##### ** This chart is animated and needs to be run in R or knitted in order to see the visual animation **
+
+This animated chart represents the United States with every state colored by their obesity levels between 2011 and 2015. Generally, the whole country seems to be getting darker except for some states. You can see that the darkest states, throughout the years, are the states in the south of the country. These southern states are know for their heavy cooking styles, which include fried chicken, buttermilk biscuits and grits. This may be a factor in their levels of obesity. 
+
+This is a nice way to see the overall levels of obesity in the United States. 
+
+```{r}
+
+# if(!'gganimate'%in%installed.packages()){
+#   install.packages('gganimate')
+# }
+# 
+# library(gganimate)
+# 
+# if(!'transformr'%in%installed.packages()){
+#   install.packages('transformr')
+# }
+# 
+# library(transformr)
+# 
+# if(!'mapproj'%in%installed.packages()){
+#   install.packages('mapproj')
+# }
+# 
+# library(mapproj)
+# 
+# if(!'gifski'%in%installed.packages()){
+#   install.packages('gifski')
+# }
+# 
+# library(gifski)
+# 
+# #Data Preparation
+# 
+# ob_total$year<-as.integer(as.character(ob_total$year))
+# 
+# states <- map_data("state")
+# ob_total$state <- tolower(ob_total$state)
+# ob_states <- merge(x = states, y = ob_total, sort = FALSE, by.x = "region", by.y = "state")
+# ob_states <- ob_states[order(ob_states$order), ]
+# 
+# #Plotting
+# 
+# anim_map<-ggplot(ob_states, aes(long, lat)) +
+#   geom_polygon(aes(group = group, fill = obesity_percentage)) +
+#   coord_map("albers",  at0 = 45.5, lat1 = 29.5)+
+#   g8_theme +
+#   labs(title = 'Obesity Rates (%) per State for the Year {frame_time}') +
+#   transition_time(year) +
+#   ease_aes('linear')+
+#   scale_fill_gradient(low = "white", high = "#993404")+
+#   theme(
+#     legend.position = 'bottom',
+#     legend.title = element_blank(),
+#     legend.text = element_text(size = 9, color = 'white'),
+#     legend.background = element_rect(fill = fill_color)
+#   )
+# 
+# animate(anim_map, duration = 5, fps  =  40)
+
+
+```
+
+#######################################################################################################
+## Conclusion ##
+#######################################################################################################
+
+In conclusion, we can say that the United States have very high levels of obesity and seem to be in an upward trend. Factors that affect obesity levels, seen in this dataset, include age, education and income. However, gender doesn't seem to be a major factor in increasing obesity levels. 
+
+From the website, we also have an update in regards to data up to 2018:
+
+"Updated September 2018: According to the most recent Behavioral Risk Factor Surveillance System (BRFSS) data, adult obesity rates now exceed 35% in seven states, 30% in 29 states and 25% in 48 states. West Virginia has the highest adult obesity rate at 38.1% and Colorado has the lowest at 22.6%. The adult obesity rate increased in Iowa, Massachusetts, Ohio, Oklahoma, Rhode Island and South Carolina between 2016 and 2017, and remained stable in the rest of states." - CDC
+
+Thus, the United State should create better policies to have a healthier population. 
