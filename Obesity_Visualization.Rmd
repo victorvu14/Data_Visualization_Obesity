@@ -442,60 +442,57 @@ This animated chart represents the United States with every state colored by the
 This is a nice way to see the overall levels of obesity in the United States. 
 
 ```{r}
+if(!'gganimate'%in%installed.packages()){
+  install.packages('gganimate')
+}
 
-# if(!'gganimate'%in%installed.packages()){
-#   install.packages('gganimate')
-# }
-# 
-# library(gganimate)
-# 
-# if(!'transformr'%in%installed.packages()){
-#   install.packages('transformr')
-# }
-# 
-# library(transformr)
-# 
-# if(!'mapproj'%in%installed.packages()){
-#   install.packages('mapproj')
-# }
-# 
-# library(mapproj)
-# 
-# if(!'gifski'%in%installed.packages()){
-#   install.packages('gifski')
-# }
-# 
-# library(gifski)
-# 
-# #Data Preparation
-# 
-# ob_total$year<-as.integer(as.character(ob_total$year))
-# 
-# states <- map_data("state")
-# ob_total$state <- tolower(ob_total$state)
-# ob_states <- merge(x = states, y = ob_total, sort = FALSE, by.x = "region", by.y = "state")
-# ob_states <- ob_states[order(ob_states$order), ]
-# 
-# #Plotting
-# 
-# anim_map<-ggplot(ob_states, aes(long, lat)) +
-#   geom_polygon(aes(group = group, fill = obesity_percentage)) +
-#   coord_map("albers",  at0 = 45.5, lat1 = 29.5)+
-#   g8_theme +
-#   labs(title = 'Obesity Rates (%) per State for the Year {frame_time}') +
-#   transition_time(year) +
-#   ease_aes('linear')+
-#   scale_fill_gradient(low = "white", high = "#993404")+
-#   theme(
-#     legend.position = 'bottom',
-#     legend.title = element_blank(),
-#     legend.text = element_text(size = 9, color = 'white'),
-#     legend.background = element_rect(fill = fill_color)
-#   )
-# 
-# animate(anim_map, duration = 5, fps  =  40)
+library(gganimate)
 
+if(!'transformr'%in%installed.packages()){
+  install.packages('transformr')
+}
 
+library(transformr)
+
+if(!'mapproj'%in%installed.packages()){
+  install.packages('mapproj')
+}
+
+library(mapproj)
+
+if(!'gifski'%in%installed.packages()){
+  install.packages('gifski')
+}
+
+library(gifski)
+
+#Data Preparation
+
+ob_total$year<-as.integer(as.character(ob_total$year))
+
+states <- map_data("state")
+ob_total$state <- tolower(ob_total$state)
+ob_states <- merge(x = states, y = ob_total, sort = FALSE, by.x = "region", by.y = "state")
+ob_states <- ob_states[order(ob_states$order), ]
+
+#Plotting
+
+anim_map<-ggplot(ob_states, aes(long, lat)) +
+  geom_polygon(aes(group = group, fill = obesity_percentage)) +
+  coord_map("albers",  at0 = 45.5, lat1 = 29.5)+
+  g8_theme +
+  labs(title = 'Obesity Rates (%) per State for the Year {frame_time}') +
+  transition_time(year) +
+  ease_aes('linear')+
+  scale_fill_gradient(low = "white", high = "#993404")+
+  theme(
+    legend.position = 'bottom',
+    legend.title = element_blank(),
+    legend.text = element_text(size = 9, color = 'white'),
+    legend.background = element_rect(fill = fill_color)
+  )
+
+animate(anim_map, duration = 5, fps  =  40)
 ```
 
 #######################################################################################################
