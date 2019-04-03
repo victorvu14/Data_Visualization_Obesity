@@ -1,4 +1,4 @@
-# Obesity_Data_Visualization
+# Data_Visualization_Obesity
 
 In this project, we visualize a dataset that contains data related to the level (rate) of adult obesity in the United States from 2011 to 2015.
 
